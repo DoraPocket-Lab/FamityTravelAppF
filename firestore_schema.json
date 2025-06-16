@@ -1,0 +1,75 @@
+{
+  "collections": [
+    {
+      "name": "users",
+      "fields": {
+        "uid": "string",
+        "familyId": "string",
+        "displayName": "string",
+        "photoURL": "string",
+        "createdAt": "timestamp"
+      },
+      "description": "Stores user profiles."
+    },
+    {
+      "name": "families",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "currency": "string (default: JPY)",
+        "members": "array<string> (list of uids)",
+        "createdAt": "timestamp"
+      },
+      "description": "Stores family information and members."
+    },
+    {
+      "name": "plans",
+      "fields": {
+        "id": "string",
+        "familyId": "string",
+        "title": "string",
+        "startDate": "timestamp",
+        "endDate": "timestamp",
+        "createdAt": "timestamp"
+      },
+      "subcollections": [
+        {
+          "name": "expenses",
+          "fields": {
+            "id": "string",
+            "description": "string",
+            "amount": "number",
+            "currency": "string",
+            "paidBy": "string (uid)",
+            "createdAt": "timestamp"
+          },
+          "description": "Sub-collection under plans, stores expenses for a specific travel plan."
+        },
+        {
+          "name": "memories",
+          "fields": {
+            "id": "string",
+            "title": "string",
+            "description": "string",
+            "photoURLs": "array<string>",
+            "createdAt": "timestamp"
+          },
+          "description": "Sub-collection under plans, stores memories (e.g., photos, notes) for a specific travel plan."
+        }
+      ],
+      "description": "Stores travel plans for families."
+    }
+  ],
+  "indexes": [
+    {
+      "collection": "plans",
+      "fields": [
+        {"field": "familyId", "order": "asc"},
+        {"field": "startDate", "order": "asc"}
+      ],
+      "type": "composite",
+      "description": "Composite index for efficient querying of plans by family and start date."
+    }
+  ]
+}
+

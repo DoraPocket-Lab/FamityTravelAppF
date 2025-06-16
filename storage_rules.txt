@@ -1,0 +1,10 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /memories/{planId}/{userId}/{fileName} {
+      allow read, write: if request.auth.uid != null &&
+                         get(/databases/(default)/documents/plans/$(planId)).data.members.hasAny([request.auth.uid]);
+    }
+  }
+}
+

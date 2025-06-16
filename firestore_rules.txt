@@ -1,0 +1,37 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write only if the requesting user's UID is in the family's members array
+    match /{document=**} {
+      allow read, write: if request.auth != null &&
+                          exists(/databases/$(database)/documents/families/$(request.auth.uid)) &&
+                          get(/databases/$(database)/documents/families/$(request.auth.uid)).data.members.hasAny([request.auth.uid]);
+    }
+
+    // Specific rules for collections (more granular control can be added here)
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /families/{familyId} {
+      allow read: if request.auth != null && get(/databases/$(database)/documents/families/$(familyId)).data.members.hasAny([request.auth.uid]);
+      allow write: if request.auth != null && get(/databases/$(database)/documents/families/$(familyId)).data.members.hasAny([request.auth.uid]) &&
+                         (request.resource.data.members.hasAny([request.auth.uid]) || !request.resource.data.members.hasAny([request.auth.uid]));
+    }
+
+    match /plans/{planId} {
+      allow read: if request.auth != null && get(/databases/$(database)/documents/families/$(resource.data.familyId)).data.members.hasAny([request.auth.uid]);
+      allow write: if request.auth != null && get(/databases/$(database)/documents/families/$(resource.data.familyId)).data.members.hasAny([request.auth.uid]);
+
+      match /expenses/{expenseId} {
+        allow read, write: if request.auth != null && get(/databases/$(database)/documents/families/$(resource.data.familyId)).data.members.hasAny([request.auth.uid]);
+      }
+
+      match /memories/{memoryId} {
+        allow read, write: if request.auth != null && get(/databases/$(database)/documents/families/$(resource.data.familyId)).data.members.hasAny([request.auth.uid]);
+      }
+    }
+  }
+}
+

@@ -1,0 +1,22 @@
+
+[
+  {
+    "collectionGroup": "items",
+    "queryScope": "COLLECTION_GROUP",
+    "fields": [
+      {
+        "fieldPath": "planId",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "day",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "sortIndex",
+        "order": "ASCENDING"
+      }
+    ]
+  }
+]
+

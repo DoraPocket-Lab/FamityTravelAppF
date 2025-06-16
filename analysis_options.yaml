@@ -1,0 +1,10 @@
+
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    - prefer_final_locals
+    - avoid_dynamic_calls
+    - always_use_package_imports
+
+

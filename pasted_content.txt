@@ -1,0 +1,67 @@
+Implement the **Expense** module inside an existing Family Travel App scaffold.
+
+════════ Data Model (Firestore) ════════
+Path: plans/{planId}/expenses/{expenseId}
+{
+  id:          string      // docId
+  category:    enum('TRANSPORT','LODGING','FOOD','ACTIVITY','OTHER')
+  amount:      double      // originalAmount
+  currency:    string      // ISO-4217, default 'JPY'
+  jpyAmount:   double      // server-side fx conversion (stubbed)
+  note:        string?
+  imageUrl:    string?     // gs://…
+  thumbUrl:    string?
+  createdAt:   serverTimestamp
+  createdBy:   uid
+}
+► Index hint: composite on (planId, createdAt DESC).
+
+════════ Tasks ════════
+1 **ExpenseRepository** (lib/features/expense/data)  
+   • Stream<List<Expense>> watch(planId) ordered by createdAt DESC.  
+   • Future<void> addExpense(ExpenseDraft, optional File receipt).  
+   • Internal helper _uploadReceipt(File) → {imageUrl, thumbUrl}.  
+   • All writes via WriteBatch: insert expense doc + update plans/{planId}.updatedAt.
+
+2 **ExpenseNotifier** (Riverpod StateNotifier) holding AsyncValue<List<Expense>>; exposes totalInPlanCurrency & totalInJPY selectors.
+
+3 **UI**  
+   • Add **ExpenseTab** in HomeShell → route `/plan/:planId/expense`.  
+   • Screen shows:  
+     – Staggered list of ExpenseCards (icon by category, formatted amount).  
+     – Persistent **BudgetProgressBar** at top: totalSpend / plan.budget.  
+   • FAB → **ExpenseFormBottomSheet**:  
+     – Dropdown category (enum above).  
+     – Amount TextField with numeric keyboard, locale formatting.  
+     – Currency picker (default ‘JPY’ but allow multi-currency).  
+     – Optional note.  
+     – Receipt picker (image).  
+     – Save button disabled till form valid; shows loading overlay.
+
+4 **OCR Stub**  
+   Provide `Future<OcrResult> scanReceipt(File img)` in lib/core/ocr_stub.dart that returns deterministic fake data based on timestamp seed (amount 1234, category FOOD, currency JPY).  
+   • Hook: after selecting image, call scanReceipt → pre-fill fields & show SnackBar “Scanned!”.  
+   • Place TODO to swap with Cloud Vision in Phase 2.
+
+5 **Image optimisation**  
+   • Compress to 80 % JPEG, max 1280px long-edge before upload.  
+   • Storage path: `receipts/{planId}/{expenseId}.jpg`.  
+   • thumbUrl generated via Firebase Storage resize extension (assume).
+
+6 **Offline & Retry**  
+   • If offline, queue ExpenseDraft + file path in Hive box ‘pendingExpenses’; show banner “Queued offline”.  
+   • ExpenseSyncService processes queue every 5 min when network available.
+
+7 **Analytics & Crashlytics**  
+   • logEvent('expense_add', {category, value:amount, currency}).  
+   • recordError on addExpense failure.
+
+8 **Unit / Widget Tests (stubs)**  
+   • expense_repository_test.dart — mocks Firestore & Storage; asserts batch write count.  
+   • expense_form_validation_test.dart — enters invalid/valid data, checks Save enabled.
+
+════════ Output Rules ════════
+• Return **only** a JSON array of `{ "file":"...", "content":"..." }` for all new or changed files.  
+• Do not emit extra prose.  
+• Code must satisfy `flutter test` & `flutter analyze`.  
+• Use TODOs for API keys / real OCR / exchange-rate logic.
